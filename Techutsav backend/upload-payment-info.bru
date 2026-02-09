@@ -1,0 +1,23 @@
+meta {
+  name: upload-payment-info
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/api/Upload-Payment-Info
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  screenshot: @file(C:\Users\ASUS\OneDrive\Pictures\vlcsnap-2024-06-10-11h57m52s555.png)
+  TXNID: TXN123461
+  amount: 5000
+  passType: IDEATHON
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
