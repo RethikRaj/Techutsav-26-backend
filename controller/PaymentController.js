@@ -2,6 +2,7 @@
 
 import { PaymentModel } from "../models/PaymentModel.js";
 import { standardResponse } from "../helper/helper.js";
+import { uploadToAzure } from "../helper/azureBlob.js";
 
 
  //Upload Payment Info
@@ -22,9 +23,10 @@ export const uploadPaymentInfo = async (req, res) => {
         );
     }
 
-    // if an already existing payment is pending for this passtype , override the previous one
+    // if an already existing payment is pending for this passtype , delete the previous one and create new
     const existingPendingPayment = await PaymentModel.findOne({ userId, passType, status: "PENDING" });
     if (existingPendingPayment) {
+      // TODO: Delete the blob object 
       await PaymentModel.findByIdAndDelete(existingPendingPayment._id);
     }
 
@@ -49,14 +51,21 @@ export const uploadPaymentInfo = async (req, res) => {
         .json(standardResponse(409, "Transaction ID already exists"));
     }
     
-    // Convert image → base64
-    const base64Image = req.file.buffer.toString("base64");
+    // // Convert image → base64
+    // const base64Image = req.file.buffer.toString("base64");
+
+    // Upload image to Azure Blob Storage
+    const screenshotUrl = await uploadToAzure(
+      req.file.buffer,
+      req.file.mimetype
+    );
+
     const payment = await PaymentModel.create({
       userId,
       TXNID,
       amount,
       passType,
-      screenshotUrl: base64Image,
+      screenshotUrl,
       screenshotMimeType: req.file.mimetype,
     });
 
