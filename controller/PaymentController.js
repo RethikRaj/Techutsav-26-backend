@@ -2,7 +2,7 @@
 
 import { PaymentModel } from "../models/PaymentModel.js";
 import { standardResponse } from "../helper/helper.js";
-import { uploadToAzure } from "../helper/azureBlob.js";
+import { deleteFromAzure, uploadToAzure } from "../helper/azureBlob.js";
 
 
  //Upload Payment Info
@@ -26,7 +26,9 @@ export const uploadPaymentInfo = async (req, res) => {
     // if an already existing payment is pending for this passtype , delete the previous one and create new
     const existingPendingPayment = await PaymentModel.findOne({ userId, passType, status: "PENDING" });
     if (existingPendingPayment) {
-      // TODO: Delete the blob object 
+      // Delete the blob object 
+      await deleteFromAzure(existingPendingPayment.screenshotUrl);
+      // Delete the document
       await PaymentModel.findByIdAndDelete(existingPendingPayment._id);
     }
 

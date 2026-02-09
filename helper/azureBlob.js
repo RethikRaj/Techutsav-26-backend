@@ -23,3 +23,18 @@ export const uploadToAzure = async (buffer, mimeType) => {
 
   return blockBlobClient.url;
 };
+
+export const deleteFromAzure = async (blobUrl) => {
+  if (!blobUrl) return;
+
+  const containerClient = blobServiceClient.getContainerClient(
+    process.env.AZURE_CONTAINER_NAME
+  );
+
+  // Extract blob name from URL
+  const blobName = blobUrl.split("/").pop();
+
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+  await blockBlobClient.deleteIfExists();
+};
