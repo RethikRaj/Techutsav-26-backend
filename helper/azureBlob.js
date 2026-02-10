@@ -39,7 +39,6 @@ export const deleteFromAzure = async (blobUrl) => {
   const blobName = decodeURIComponent(
     url.pathname.replace(`/${process.env.AZURE_CONTAINER_NAME}/`, "")
   );
-  console.log("Deleting blob:", blobName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   await blockBlobClient.deleteIfExists();
