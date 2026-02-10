@@ -5,13 +5,16 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(
   process.env.AZURE_STORAGE_CONNECTION_STRING
 );
 
-export const uploadToAzure = async (buffer, mimeType) => {
+export const uploadToAzure = async (buffer, mimeType, folder) => {
   const containerClient = blobServiceClient.getContainerClient(
     process.env.AZURE_CONTAINER_NAME
   );
 
   const extension = mimeType.split("/")[1];
-  const blobName = `payment_${Date.now()}_${crypto.randomUUID()}.${extension}`;
+  const fileName = `${crypto.randomUUID()}.${extension}`;
+
+  // 👇 virtual directory
+  const blobName = `${folder}/${fileName}`;
 
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
@@ -31,9 +34,12 @@ export const deleteFromAzure = async (blobUrl) => {
     process.env.AZURE_CONTAINER_NAME
   );
 
-  // Extract blob name from URL
-  const blobName = blobUrl.split("/").pop();
-
+  // ✅ extract full blob path including folders
+  const url = new URL(blobUrl);
+  const blobName = decodeURIComponent(
+    url.pathname.replace(`/${process.env.AZURE_CONTAINER_NAME}/`, "")
+  );
+  console.log("Deleting blob:", blobName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   await blockBlobClient.deleteIfExists();

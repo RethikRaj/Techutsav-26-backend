@@ -23,6 +23,14 @@ export const uploadPaymentInfo = async (req, res) => {
         );
     }
 
+    // Duplicate TXN check
+    const existingTxn = await PaymentModel.findOne({ TXNID });
+    if (existingTxn) {
+      return res
+        .status(409)
+        .json(standardResponse(409, "Transaction ID already exists"));
+    }
+
     // if an already existing payment is pending for this passtype , delete the previous one and create new
     const existingPendingPayment = await PaymentModel.findOne({ userId, passType, status: "PENDING" });
     if (existingPendingPayment) {
@@ -45,13 +53,7 @@ export const uploadPaymentInfo = async (req, res) => {
         );
     }
 
-    // Duplicate TXN check
-    const existingTxn = await PaymentModel.findOne({ TXNID });
-    if (existingTxn) {
-      return res
-        .status(409)
-        .json(standardResponse(409, "Transaction ID already exists"));
-    }
+    
     
     // // Convert image → base64
     // const base64Image = req.file.buffer.toString("base64");
@@ -59,7 +61,8 @@ export const uploadPaymentInfo = async (req, res) => {
     // Upload image to Azure Blob Storage
     const screenshotUrl = await uploadToAzure(
       req.file.buffer,
-      req.file.mimetype
+      req.file.mimetype,
+      `payments/${passType}`
     );
 
     const payment = await PaymentModel.create({
