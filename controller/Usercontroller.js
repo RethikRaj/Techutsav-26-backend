@@ -102,18 +102,21 @@ export const verifyEmail = async (req, res) => {
     const { auth } = req.query;
     const newUser = await UserModel.findOne({ emailAuthCode: auth });
     if (!newUser) {
-      return res
-        .status(400)
-        .json(standardResponse(400, "Invalid Authentication."));
+      // return res
+      //   .status(400)
+      //   .json(standardResponse(400, "Invalid Authentication."));
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/verify-failed`
+      );
     }
     if (newUser.isEmailVerified) {
-      return res
-        .status(200)
-        .json(standardResponse(200, "User already verified."));
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login`
+      );
     }
     await UserModel.findOneAndUpdate(
       { emailAuthCode: auth },
-      { $set: { isEmailVerified: true } },
+      { $set: { isEmailVerified: true , emailAuthCode: null} },
     );
 
     // Increment college total count
@@ -122,9 +125,9 @@ export const verifyEmail = async (req, res) => {
       { $inc: { totalCount: 1 } },
     );
 
-    return res
-      .status(200)
-      .json(standardResponse(200, "Account verified successfully"));
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/login?email=${newUser.email}`
+    );
   } catch (error) {
     console.log("Error: ", error);
     res.status(500).json(standardResponse(500, "Internal server issue"));
